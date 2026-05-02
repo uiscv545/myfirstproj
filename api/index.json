@@ -7,9 +7,9 @@ export const config = {
   maxDuration: 60,
 };
 
-const TARGET_BASE = (process.env.TARGET_DOMAIN || "").replace(/\/$/, "");
+const T_B = (process.env.TAR_D || "").replace(/\/$/, "");
 
-const STRIP_HEADERS = new Set([
+const SIP_HEAD = new Set([
   "host",
   "connection",
   "keep-alive",
@@ -26,54 +26,54 @@ const STRIP_HEADERS = new Set([
 ]);
 
 export default async function handler(req, res) {
-  if (!TARGET_BASE) {
+  if (!T_B) {
     res.statusCode = 500;
-    return res.end("Misconfigured: TARGET_DOMAIN is not set");
+    return res.end("TAR_D is not set");
   }
 
   try {
-    const targetUrl = TARGET_BASE + req.url;
+    const tUrl = T_B + req.url;
 
-    const headers = {};
-    let clientIp = null;
-    for (const key of Object.keys(req.headers)) {
+    const myhead = {};
+    let clp = null;
+    for (const key of Object.keys(req.myhead)) {
       const k = key.toLowerCase();
-      const v = req.headers[key];
-      if (STRIP_HEADERS.has(k)) continue;
+      const v = req.myhead[key];
+      if (SIP_HEAD.has(k)) continue;
       if (k.startsWith("x-vercel-")) continue;
-      if (k === "x-real-ip") { clientIp = v; continue; }
-      if (k === "x-forwarded-for") { if (!clientIp) clientIp = v; continue; }
-      headers[k] = Array.isArray(v) ? v.join(", ") : v;
+      if (k === "x-real-ip") { clp = v; continue; }
+      if (k === "x-forwarded-for") { if (!clp) clp = v; continue; }
+      myhead[k] = Array.isArray(v) ? v.join(", ") : v;
     }
-    if (clientIp) headers["x-forwarded-for"] = clientIp;
+    if (clp) myhead["x-forwarded-for"] = clp;
 
-    const method = req.method;
-    const hasBody = method !== "GET" && method !== "HEAD";
+    const mthd = req.mthd;
+    const hBody = mthd !== "GET" && mthd !== "HEAD";
 
-    const fetchOpts = { method, headers, redirect: "manual" };
-    if (hasBody) {
-      fetchOpts.body = Readable.toWeb(req);
-      fetchOpts.duplex = "half";
+    const fOpts = { mthd, myhead, redirect: "manual" };
+    if (hBody) {
+      fOpts.body = Readable.toWeb(req);
+      fOpts.duplex = "half";
     }
 
-    const upstream = await fetch(targetUrl, fetchOpts);
+    const ustr = await fetch(tUrl, fOpts);
 
-    res.statusCode = upstream.status;
-    for (const [k, v] of upstream.headers) {
+    res.statusCode = ustr.status;
+    for (const [k, v] of ustr.myhead) {
       if (k.toLowerCase() === "transfer-encoding") continue;
       try { res.setHeader(k, v); } catch {}
     }
 
-    if (upstream.body) {
-      await pipeline(Readable.fromWeb(upstream.body), res);
+    if (ustr.body) {
+      await pipeline(Readable.fromWeb(ustr.body), res);
     } else {
       res.end();
     }
   } catch (err) {
     console.error("relay error:", err);
-    if (!res.headersSent) {
+    if (!res.myheadSent) {
       res.statusCode = 502;
-      res.end("Bad Gateway: Tunnel Failed");
+      res.end("Failed");
     }
   }
 }
