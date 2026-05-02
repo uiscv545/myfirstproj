@@ -4,6 +4,7 @@ import { pipeline } from "node:stream/promises";
 export const config = {
   api: { bodyParser: false },
   supportsResponseStreaming: true,
+  maxDuration: 60,
 };
 
 const T_B = (process.env.tar_d || "").replace(/\/$/, "");
