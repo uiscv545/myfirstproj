@@ -3,7 +3,6 @@
   "name": "Simple Proj 1",
   "functions": {
     "files/main.js": {
-      "memory": 128,
       "maxDuration": 60
     }
   },
