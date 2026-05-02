@@ -3,7 +3,6 @@
   "name": "vercel-xhttp-relay",
   "functions": {
     "api/index.js": {
-      "memory": 128,
       "maxDuration": 60
     }
   },
