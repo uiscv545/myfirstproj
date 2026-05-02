@@ -1,13 +1,14 @@
 {
-  "version": 1.0.1,
-  "name": "Simple Proj 1",
+  "version": 2,
+  "name": "vlay",
   "functions": {
-    "files/main.js": {
+    "api/index.js": {
+      "memory": 128,
       "maxDuration": 60
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/files/main" }
+    { "source": "/(.*)", "destination": "/api/index" }
   ],
   "trailingSlash": false
 }
