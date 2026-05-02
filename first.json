@@ -2,7 +2,9 @@
   "version": 1.0.1,
   "name": "Simple Proj 1",
   "functions": {
-    "files/main.js": {    }
+    "files/main.js": {
+      "maxDuration": 60
+    }
   },
   "rewrites": [
     { "source": "/(.*)", "destination": "/files/main" }
