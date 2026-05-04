@@ -1,8 +1,13 @@
 {
-  "name": "veRCEL",
-  "version": "2",
-  "type": "module",
-  "description": "veRCEL",
+  "name": "SimpleApp2",
+  "version": "1.0.0",
+  "description": "SimpleApp2",
   "private": true,
-  "license": "MIT"
+  "license": "ProService_0x010203x1",
+  "scripts": {
+    "dev": "netlify dev"
+	},
+  "devDependencies": {
+    "netlify-cli": "latest"
+  }
 }
