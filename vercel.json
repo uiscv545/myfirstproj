@@ -1,11 +1,6 @@
 {
   "version": 2,
-  "name": "Vercel P1",
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 60
-    }
-  },
+  "name": "vercel-xhttp-relay",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
   ],
