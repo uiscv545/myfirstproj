@@ -1,13 +1,8 @@
 {
-  "name": "SimpleApp2",
-  "version": "1.0.0",
-  "description": "SimpleApp2",
+  "name": "Vercel P1",
+  "version": "1.1.0",
+  "type": "module",
+  "description": "Vercel P1",
   "private": true,
-  "license": "ProService_0x010203x1",
-  "scripts": {
-    "dev": "netlify dev"
-	},
-  "devDependencies": {
-    "netlify-cli": "latest"
-  }
+  "license": "MIT"
 }
