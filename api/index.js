@@ -1,4 +1,13 @@
-const DEST_BASE = (Netlify.env.get("DEST") || "").replace(/\/$/, "");
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+
+export const config = {
+  api: { bodyParser: false },
+  supportsResponseStreaming: true,
+  maxDuration: 60,
+};
+
+const TARGET_BASE = (process.env.TARGET_DOMAIN || "").replace(/\/$/, "");
 
 const STRIP_HEADERS = new Set([
   "host",
@@ -16,62 +25,55 @@ const STRIP_HEADERS = new Set([
   "x-forwarded-port",
 ]);
 
-export default async function handler(request) {
-  if (!DEST_BASE) {
-    return new Response("Misconfigured: DEST is not set", { status: 500 });
+export default async function handler(req, res) {
+  if (!TARGET_BASE) {
+    res.statusCode = 500;
+    return res.end("Misconfigured: TARGET_DOMAIN is not set");
   }
 
   try {
-    const url = new URL(request.url);
-    const targetUrl = DEST_BASE + url.pathname + url.search;
+    const targetUrl = TARGET_BASE + req.url;
 
-    const headers = new Headers();
+    const headers = {};
     let clientIp = null;
-
-    for (const [key, value] of request.headers) {
+    for (const key of Object.keys(req.headers)) {
       const k = key.toLowerCase();
+      const v = req.headers[key];
       if (STRIP_HEADERS.has(k)) continue;
-      if (k.startsWith("x-nf-")) continue;
-      if (k.startsWith("x-netlify-")) continue;
-      if (k === "x-real-ip") {
-        clientIp = value;
-        continue;
-      }
-      if (k === "x-forwarded-for") {
-        if (!clientIp) clientIp = value;
-        continue;
-      }
-      headers.set(k, value);
+      if (k.startsWith("x-vercel-")) continue;
+      if (k === "x-real-ip") { clientIp = v; continue; }
+      if (k === "x-forwarded-for") { if (!clientIp) clientIp = v; continue; }
+      headers[k] = Array.isArray(v) ? v.join(", ") : v;
     }
+    if (clientIp) headers["x-forwarded-for"] = clientIp;
 
-    if (clientIp) headers.set("x-forwarded-for", clientIp);
-
-    const method = request.method;
+    const method = req.method;
     const hasBody = method !== "GET" && method !== "HEAD";
 
-    const fetchOptions = {
-      method,
-      headers,
-      redirect: "manual",
-    };
-
+    const fetchOpts = { method, headers, redirect: "manual" };
     if (hasBody) {
-      fetchOptions.body = request.body;
+      fetchOpts.body = Readable.toWeb(req);
+      fetchOpts.duplex = "half";
     }
 
-    const upstream = await fetch(targetUrl, fetchOptions);
+    const upstream = await fetch(targetUrl, fetchOpts);
 
-    const responseHeaders = new Headers();
-    for (const [key, value] of upstream.headers) {
-      if (key.toLowerCase() === "transfer-encoding") continue;
-      responseHeaders.set(key, value);
+    res.statusCode = upstream.status;
+    for (const [k, v] of upstream.headers) {
+      if (k.toLowerCase() === "transfer-encoding") continue;
+      try { res.setHeader(k, v); } catch {}
     }
 
-    return new Response(upstream.body, {
-      status: upstream.status,
-      headers: responseHeaders,
-    });
-  } catch (error) {
-    return new Response("Bad Gateway: Relay Failed", { status: 502 });
+    if (upstream.body) {
+      await pipeline(Readable.fromWeb(upstream.body), res);
+    } else {
+      res.end();
+    }
+  } catch (err) {
+    console.error("relay error:", err);
+    if (!res.headersSent) {
+      res.statusCode = 502;
+      res.end("Bad Gateway: Tunnel Failed");
+    }
   }
 }
