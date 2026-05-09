@@ -1,8 +1,7 @@
 {
-  "name": "Vercel P1",
-  "version": "1.1.0",
-  "type": "module",
-  "description": "Vercel P1",
+  "name": "vercel-xhttp-relay",
+  "version": "1.0.0",
+  "description": "Edge-runtime XHTTP relay for Xray/V2Ray on Vercel",
   "private": true,
   "license": "MIT"
 }
